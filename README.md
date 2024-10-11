@@ -1,2 +1,2 @@
-# redmulher
- um rederecionador para RR longas 
+# RedirPy
+ Um projetinho simples com Python, Flask e MySQL.

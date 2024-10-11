@@ -43,7 +43,22 @@ def edit(id):
 
 @app.route('/admin')
 def admin():
-    return 'Listando todo mundo'
+
+    sql = '''
+        SELECT id, name, link, short, views,
+            DATE_FORMAT(date, '%%d/%%m/%%Y %%H:%%i') AS datebr,
+            DATE_FORMAT(expire, '%%d/%%m/%%Y %%H:%%i') AS expirebr
+        FROM redir
+        WHERE status = 'on'
+        ORDER BY name, short, date DESC, expire DESC;
+    '''
+    cur = mysql.connection.cursor()
+    cur.execute(sql)
+    shortlinks = cur.fetchall()
+
+    print('\n\n\n', shortlinks, '\n\n\n')
+
+    return render_template('admin.html')
 
 
 @app.route('/new', methods=['GET', 'POST'])
@@ -64,32 +79,26 @@ def new():
         '''
         cur = mysql.connection.cursor()
         cur.execute(sql, (form['name'], form['short'],))
-        total = int(cur.fetchone())
+        total = cur.fetchone()
 
-        # BUG HERE
         # print('\n\n\n', total['total'], '\n\n\n')
 
-        if total > 0:
+        if int(total['total']) > 0:
             error = True
 
         else:
 
             sql = '''
-                INSERT INTO redir (
-                    name, link, short, expire
-                ) VALUES (
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-            '''            
-            cur.execute(sql, (form['name'], form['link'], form['short'], form['expire'],))
+                INSERT INTO redir (name, link, short, expire)
+                VALUES (%s, %s, %s, %s)
+            '''
+            cur.execute(sql, (form['name'], form['link'],
+                        form['short'], form['expire'],))
             mysql.connection.commit()
-        
-        cur.close()
 
-        sended = True
+            sended = True
+
+        cur.close()
 
     data_atual = datetime.now()                             # Data atual
     data_futura = data_atual + timedelta(days=365)          # Adicionando 1 ano
